@@ -30,9 +30,8 @@
 #define TURRET_PIN_3			            PIN_PB1
 #define TURRET_PIN_4			            PIN_PB0
 
-// Steps are codded to be 512 per 360 deg.
-// TODO :: do some maths to figure out steps required to achieve given angle --> currently coded so that 1 angle == 1 step
-void rotateCW(AccelStepper &left, AccelStepper &right, uint8_t angle);
-void rotateCCW(AccelStepper &left, AccelStepper &right, uint8_t angle);
+
+void rotateCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
+void rotateCCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
 
 #endif /* MOTOR_H_ */

@@ -28,9 +28,9 @@ void locate() {
 	int dist2[50];
 	int moveAngle = 5;
 	for (int i=0; i<50; i++) {
-		move(moveAngle, 0); // replace with rotateCW(), from motor.c
-		dist[i] = readDistance(0);
-		dist2[i] = readDistance(1);
+		//move(moveAngle, 0); // replace with rotateCW(), from motor.c
+		//dist[i] = readDistance(0);
+		//dist2[i] = readDistance(1);
 	}
 	
 	int angleToSquare;
@@ -43,7 +43,7 @@ void locate() {
 				currentCoord[1] = (dist[i+90/moveAngle] < dist2[i+90/moveAngle]) ? dist[i+90/moveAngle] : dist2[i+90/moveAngle];
 				float distCentre = distanceCentre(currentCoord[0], currentCoord[1]);
 				float angle = angleCentre(currentCoord[0], currentCoord[1]);
-				forwardStep(10,2); // test if will call stepper motors.
+				//forwardStep(10,2); // test if will call stepper motors.
 				break;
 			}
 		}

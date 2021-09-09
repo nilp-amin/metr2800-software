@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "../motor/motor.h"
+
 #define LASER_PIN               PIN_PB4     
 
 
@@ -39,13 +41,25 @@ class IR {
            uint8_t ir5, uint8_t ir6, uint8_t ir7, uint8_t ir8, 
            uint16_t sensativity, uint16_t samples);
         void getReadings();
+        void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret);
+
         float readings[8];
 
     private:
-        uint16_t minReading;
-        uint16_t samples;
+        uint16_t minReading = 100;
+        uint16_t samples = 100;
         uint8_t pins[8];
+        uint16_t stepAngle = 0;
+        float history[4];
+        int sectorCount = 0;
         float readIR(uint8_t pin);
+        float tvalues(bool inner=false);
+        float bvalues(bool inner=false);
+        float rvalues(bool inner=false);
+        float lvalues(bool inner=false);
+
+        void updateHistory();
+        float irrdance();
 };
 
 #endif /*TURRET_H_ */

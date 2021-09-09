@@ -23,12 +23,13 @@ float angleCentre(int x, int y) {
 	}
 }*/
 
+/*
 void locate() {
 	int dist[50]; // calibrate array size, will be based on move angle 
 	int dist2[50];
 	int moveAngle = 5;
 	for (int i=0; i<50; i++) {
-		move(moveAngle, 0); // replace with rotateCW(), from motor.c
+		//move(moveAngle, 0); // replace with rotateCW(), from motor.c
 		dist[i] = readDistance(0);
 		dist2[i] = readDistance(1);
 	}
@@ -53,3 +54,4 @@ void locate() {
 	// might be best to have these values stored in a struct, and return the struct. 
 	return;
 }
+*/

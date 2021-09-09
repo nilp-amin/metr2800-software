@@ -28,11 +28,38 @@ IR::IR(uint8_t ir1, uint8_t ir2, uint8_t ir3, uint8_t ir4,
     this->pins[7] = ir8;
 }
 
+void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret) {
+    // Reset stepper positions for logic
+    lstepper.setCurrentPosition(0);
+    rstepper.setCurrentPosition(0);
+    turret.setCurrentPosition(0);
+
+    uint8_t angle = 360;
+    uint8_t angleStep = 5;
+    while (1) {
+        getReadings();
+        // Check spikes in 20 degree sectors of 5deg steps 
+        // If spike seen in 20 degree sectors investigate
+        rotateCW(lstepper, rstepper, angleStep);
+    }
+    
+}
+
 // Might want to store history of sensor readings
 void IR::getReadings() {
     for (uint8_t i = 0; i < sizeof(pins); i++) {
-        readings[i] = IR::readIR(pins[i]);
+        this->readings[i] = IR::readIR(pins[i]);
     }
+    history[this->sectorCount % 4] = irrdance();
+    this->sectorCount++;
+}
+
+float IR::irrdance() {
+    int sum = 0;
+    for (uint8_t i = 0; i < sizeof(pins); i++) {
+        sum += this->readings[i];
+    }
+    return (sum/ sizeof(pins));
 }
 
 float IR::readIR(uint8_t pin) {
@@ -41,4 +68,44 @@ float IR::readIR(uint8_t pin) {
         total += analogRead(pin);
     }
     return (total / this->samples);
+}
+
+float IR::tvalues(bool inner=false) {
+    uint8_t count = 2;
+    int sum = this->readings[0] + this->readings[1];
+    if (inner) {
+        sum += this->readings[4] + this->readings[5];
+        count += 2;
+    }
+    return (sum / count); // change division number if more included
+}
+
+float IR::bvalues(bool inner=false) {
+    uint8_t count = 2;
+    int sum = this->readings[2] + this->readings[3];
+    if (inner) {
+        sum += this->readings[6] + this->readings[7];
+        count += 2;
+    }
+    return (sum / count);
+}
+
+float IR::rvalues(bool inner=false) {
+    uint8_t count = 2;
+    int sum = this->readings[1] + this->readings[2];
+    if (inner) {
+        sum += this->readings[5] + this->readings[6];
+        count += 2;
+    }
+    return (sum / count);
+}
+
+float IR::lvalues(bool inner=false) {
+    uint8_t count = 2;
+    int sum = this->readings[0] + this->readings[3];
+    if (inner) {
+        sum += this->readings[4] + this->readings[7];
+        count += 2;
+    }
+    return (sum / count);
 }

@@ -6,7 +6,7 @@
 #include "../lib/motor/motor.h"
 #include "../lib/turret/turret.h"
 
-Laser laser(LASER_PIN, 2000UL);
+//Laser laser(LASER_PIN, 2000UL);
 IR irSensors(IR1_PIN, IR2_PIN, IR3_PIN, IR4_PIN,
              IR5_PIN, IR6_PIN, IR7_PIN, IR8_PIN, 
              100, 100);
@@ -28,10 +28,23 @@ AccelStepper turretStepper(AccelStepper::HALF4WIRE, TURRET_PIN_1,
 void setup() {  
   Serial.begin(9600);
   leftStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
-  leftStepper.setAcceleration(50);
+  leftStepper.setAcceleration(500);
+
+  leftStepper.move(2000);
+  leftStepper.setMaxSpeed(500);
+  leftStepper.enableOutputs();
+
   rightStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
-  rightStepper.setAcceleration(50);
+  rightStepper.setAcceleration(500);
+  rightStepper.move(2000);
+  rightStepper.enableOutputs();
+
   turretStepper.setMaxSpeed(MAX_SPEED_HALFSTEP);
+  turretStepper.enableOutputs();
+  turretStepper.setAcceleration(200);
+  turretStepper.setMaxSpeed(1000);
+  turretStepper.move(2000);
+  Serial.println("Hello world");
 }
 
 void loop() {
@@ -39,7 +52,4 @@ void loop() {
   //need to scan area and move to centre
   locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
   // create loop to scan for targets
-  irSensors.getReadings(); // how to call move, should getReading return a value or call move itself wihtin irSensors?
-
-  ;
 }

@@ -14,7 +14,7 @@ void Laser::shootLaser() {
 
 IR::IR(uint8_t ir1, uint8_t ir2, uint8_t ir3, uint8_t ir4,
        uint8_t ir5, uint8_t ir6, uint8_t ir7, uint8_t ir8, 
-       uint16_t sensativity, uint16_t samples) {
+       float sensativity, uint16_t samples) {
     this->minReading = sensativity;
     this->samples = samples;
 

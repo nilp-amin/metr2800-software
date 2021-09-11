@@ -33,5 +33,7 @@
 
 void rotateCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
 void rotateCCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
+void stepCW(AccelStepper& left, AccelStepper& right, int steps);
+void stepCCW(AccelStepper& left, AccelStepper& right, int steps);
 
 #endif /* MOTOR_H_ */

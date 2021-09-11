@@ -34,12 +34,11 @@ void setup() {
   leftStepper.setMaxSpeed(500);
   leftStepper.enableOutputs();
 
-/*
   rightStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
   rightStepper.setAcceleration(500);
   rightStepper.move(2000);
   rightStepper.enableOutputs();
-  */
+
   turretStepper.setMaxSpeed(MAX_SPEED_HALFSTEP);
   turretStepper.enableOutputs();
   turretStepper.setAcceleration(200);

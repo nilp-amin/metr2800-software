@@ -8,7 +8,7 @@ int angleToSteps(uint8_t angle) {
 }
 
 // Blocking code
-void rotateCW(AccelStepper &left, AccelStepper &right, uint8_t angle) {
+void rotateCW(AccelStepper& left, AccelStepper& right, uint8_t angle) {
 	int steps = angleToSteps(angle);
 	left.enableOutputs();
 	right.enableOutputs();
@@ -20,13 +20,33 @@ void rotateCW(AccelStepper &left, AccelStepper &right, uint8_t angle) {
 }
 
 // Blocking code
-void rotateCCW(AccelStepper &left, AccelStepper &right, uint8_t angle) {
+void rotateCCW(AccelStepper& left, AccelStepper& right, uint8_t angle) {
 	int steps = angleToSteps(angle);
 	left.enableOutputs();
 	right.enableOutputs();
 	left.move(-steps);
 	right.move(steps);
 	while (!left.run() || !right.run()); 
+	left.disableOutputs();
+	right.disableOutputs();
+}
+
+void stepCW(AccelStepper& left, AccelStepper& right, int steps) {
+	left.enableOutputs();
+	right.enableOutputs();
+	left.move(steps);
+	right.move(-steps);
+	while (!left.run() || !right.run());
+	left.disableOutputs();
+	right.disableOutputs();
+}
+
+void stepCCW(AccelStepper& left, AccelStepper& right, int steps) {
+	left.enableOutputs();
+	right.enableOutputs();
+	left.move(-steps);
+	right.move(steps);
+	while (!left.run() || !right.run());
 	left.disableOutputs();
 	right.disableOutputs();
 }

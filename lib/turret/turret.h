@@ -50,14 +50,16 @@ class IR {
         uint16_t samples = 100;
         uint8_t pins[8];
         uint16_t stepAngle = 0;
+        uint8_t sensativity = 0;
+        float currentMax = 0;
         float history[4];
         int sectorCount = 0;
+
         float readIR(uint8_t pin);
         float tvalues(bool inner=false);
         float bvalues(bool inner=false);
         float rvalues(bool inner=false);
         float lvalues(bool inner=false);
-
         void updateHistory();
         float irrdance();
 };

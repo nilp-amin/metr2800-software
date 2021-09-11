@@ -34,13 +34,18 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
     rstepper.setCurrentPosition(0);
     turret.setCurrentPosition(0);
 
-    uint8_t angle = 360;
-    uint8_t angleStep = 5;
+    uint16_t angle = 0;
+    uint8_t BASE_STEP_INTERVAL = 3;  // Provides samples at 0.5deg
+    uint8_t TURRET_STEP_INTERVAL = 3; // Provides sampels at 0.5deg
+    // Obtain average samples readings every 0.5deg
+    // Every 90 degrees find maximum reading and check difference relative to noise
+    //  --> if contrast between noise and max reading > this->sensativity
+    //  --> go to that step position or angle.
+    //  --> then do a longitduinal search for largest spike
+    // Every 360/90 degree reset everything to 0 and restart from first step again
     while (1) {
         getReadings();
-        // Check spikes in 20 degree sectors of 5deg steps 
-        // If spike seen in 20 degree sectors investigate
-        rotateCW(lstepper, rstepper, angleStep);
+        stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
     }
     
 }
@@ -59,7 +64,7 @@ float IR::irrdance() {
     for (uint8_t i = 0; i < sizeof(pins); i++) {
         sum += this->readings[i];
     }
-    return (sum/ sizeof(pins));
+    return (sum / sizeof(pins));
 }
 
 float IR::readIR(uint8_t pin) {

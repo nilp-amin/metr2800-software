@@ -33,6 +33,8 @@
 
 void rotateCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
 void rotateCCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
+void moveForward(AccelStepper& left, AccelStepper& right, uint8_t distance);
+bool move(AccelStepper& left, AccelStepper& right, int angle, int distance);
 void stepCW(AccelStepper& left, AccelStepper& right, int steps);
 void stepCCW(AccelStepper& left, AccelStepper& right, int steps);
 

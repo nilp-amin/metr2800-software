@@ -48,6 +48,8 @@ void setup() {
 }
 
 void loop() {
-    Serial.println("Hello world222");
-    turretStepper.run();
+
+  //need to scan area and move to centre
+  locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
+  // create loop to scan for targets
 }

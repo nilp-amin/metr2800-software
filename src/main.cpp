@@ -35,5 +35,11 @@ void setup() {
 }
 
 void loop() {
+
+  //need to scan area and move to centre
+  locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
+  // create loop to scan for targets
+  irSensors.getReadings(); // how to call move, should getReading return a value or call move itself wihtin irSensors?
+
   ;
 }

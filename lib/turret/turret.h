@@ -2,6 +2,8 @@
 #define TURRET_H_
 
 #include <Arduino.h>
+#include <string.h>
+#include <math.h>
 
 #include "../motor/motor.h"
 
@@ -39,8 +41,8 @@ class IR {
     public:
         IR(uint8_t ir1, uint8_t ir2, uint8_t ir3, uint8_t ir4,
            uint8_t ir5, uint8_t ir6, uint8_t ir7, uint8_t ir8, 
-           uint16_t sensativity, uint16_t samples);
-        void getReadings();
+           float sensativity, uint16_t samples);
+        float totalSensorAvg();
         void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret);
 
         float readings[8];
@@ -50,18 +52,20 @@ class IR {
         uint16_t samples = 100;
         uint8_t pins[8];
         uint16_t stepAngle = 0;
-        uint8_t sensativity = 0;
-        float currentMax = 0;
-        float history[4];
-        int sectorCount = 0;
+        float sensativity = 3.19F; // calculated using stddev table
+        float noiseReading = 0.0F;
+        float history[180]; // Reset this every 90deg
 
         float readIR(uint8_t pin);
         float tvalues(bool inner=false);
         float bvalues(bool inner=false);
         float rvalues(bool inner=false);
         float lvalues(bool inner=false);
-        void updateHistory();
-        float irrdance();
+        float historyAvg();
+        float stddevHistory(float mean);
+        void getReadings(uint8_t anglePos);
+        float zscoreAlgo(float scaling, uint8_t& valid);
+        uint8_t noiseyPeakFindingAlgo(uint8_t scaling);
 };
 
 #endif /*TURRET_H_ */

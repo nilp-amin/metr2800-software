@@ -27,6 +27,9 @@
 #define IR7_PIN                 PIN_PA6
 #define IR8_PIN                 PIN_PA2
 
+#define LONGITDUINAL            0
+#define LATIDUINAL              1
+
 class Laser {
     public:
         Laser(uint8_t sigPin, uint8_t onTime);
@@ -43,7 +46,7 @@ class IR {
            uint8_t ir5, uint8_t ir6, uint8_t ir7, uint8_t ir8, 
            float sensativity, uint16_t samples);
         float totalSensorAvg();
-        void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret);
+        void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
 
         float readings[8];
 
@@ -54,7 +57,8 @@ class IR {
         uint16_t stepAngle = 0;
         float sensativity = 3.19F; // calculated using stddev table
         float noiseReading = 0.0F;
-        float history[180]; // Reset this every 90deg
+        float history[180]; // Reset this every 90deg [0, 90]
+        float latHistory[120]; // Reset this every time target located [0, 60]
 
         float readIR(uint8_t pin);
         float tvalues(bool inner=false);
@@ -62,10 +66,10 @@ class IR {
         float rvalues(bool inner=false);
         float lvalues(bool inner=false);
         float historyAvg();
-        float stddevHistory(float mean);
-        void getReadings(uint8_t anglePos);
+        float maxLatHistory(uint8_t scaling);
+        float stddevHistory(float mean, uint8_t lateral);
+        void getReadings(uint8_t anglePos, uint8_t lateral);
         float zscoreAlgo(float scaling, uint8_t& valid);
-        uint8_t noiseyPeakFindingAlgo(uint8_t scaling);
 };
 
 #endif /*TURRET_H_ */

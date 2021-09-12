@@ -28,7 +28,7 @@ IR::IR(uint8_t ir1, uint8_t ir2, uint8_t ir3, uint8_t ir4,
     this->pins[7] = ir8;
 }
 
-void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret) {
+void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser) {
     // Reset stepper positions for logic
     lstepper.setCurrentPosition(0);
     rstepper.setCurrentPosition(0);
@@ -37,7 +37,7 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
     float currAngle = 0;
     uint8_t readingCount = 0;
     uint8_t BASE_STEP_INTERVAL = 3;  // Provides samples at 0.5deg
-    uint8_t TURRET_STEP_INTERVAL = 3; // Provides sampels at 0.5deg
+    uint8_t TURRET_STEP_INTERVAL = 6; // Provides samples at 0.5deg
     float SCALING = (BASE_STEP_INTERVAL * 360 / STEPS_PER_REV_FULLSTEP);
     // Obtain average samples readings every 0.5deg
     // Every 90 degrees find maximum reading and check difference relative to noise
@@ -46,7 +46,7 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
     //  --> then do a longitduinal search for largest spike
     // Every 90 degree reset everything to 0 and restart from first step again
     while (1) {
-        IR::getReadings(readingCount);
+        IR::getReadings(readingCount, LONGITDUINAL);
         stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
         
         if (currAngle >= 90) {
@@ -55,7 +55,24 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
             if (isValid) {
                 int moveSteps = (BASE_STEP_INTERVAL / SCALING) * (currAngle - maxValAngle);
                 stepCCW(lstepper, rstepper, moveSteps);
+
                 // Now we do a lateral search
+                float TURRET_SCALING = (TURRET_STEP_INTERVAL * 360 / STEPS_PER_REV_HALFSTEP);
+                float currTurretAngle = 0;
+                uint8_t latReadingCount = 0; 
+                while(1) {
+                    IR::getReadings(latReadingCount, LATIDUINAL);
+                    // TODO: Write turret code to move turret Stepper around 
+                    if (currTurretAngle >= 60) {
+                        float turretMaxValAngle = IR::maxLatHistory(TURRET_SCALING);
+                        // now we move to the max value angle and fire laser
+                        // TODO: Add the moving code
+                        laser.shootLaser();
+                        memset(this->latHistory, 0, sizeof(float)*sizeof(this->latHistory));
+                        break;
+                    }
+                    currTurretAngle += TURRET_SCALING;
+                }
 
                 // Move slightly away from target then reset parameters
                 rotateCW(lstepper, rstepper, 10);
@@ -89,24 +106,12 @@ float IR::zscoreAlgo(float scaling, uint8_t& isValid) {
     }
 
     // Now we check if it is actually a valid spike
-    float stddev = IR::stddevHistory(baseline);
+    float stddev = IR::stddevHistory(baseline, LONGITDUINAL);
     if ((max - baseline) > stddev*this->sensativity) {
         isValid = 1;
     }
 
     return maxIndex * scaling;
-}
-
-// TODO: Finish
-uint8_t IR::noiseyPeakFindingAlgo(uint8_t scaling) {
-    uint8_t maxIndex = 0;
-    float baseline = IR::historyAvg();
-    float smoothed[sizeof(this->history)];
-    memset(smoothed, 0, sizeof(float)*sizeof(smoothed));
-    // Smooth data
-
-    // Then find peaks
-    return maxIndex;
 }
 
 float IR::historyAvg() {
@@ -119,12 +124,34 @@ float IR::historyAvg() {
     return sum / sizeof(this->history);
 }
 
-float IR::stddevHistory(float mean) {
-    float stddev = 0.0;
-    for (uint8_t i = 0; i < sizeof(this->history); i++) {
-        stddev += pow(this->history[i] - mean, 2);
+float IR::maxLatHistory(uint8_t scaling) {
+    int max = 0;
+    int curr = 0;
+    uint8_t maxIndex = 0;
+    for (uint8_t i = 0; i < sizeof(this->latHistory); i++) {
+        curr = this->latHistory[i];
+        if (curr > max) {
+            max = curr;
+            maxIndex = i;
+        }
     }
-    return sqrt(stddev / sizeof(this->history));
+    return maxIndex * scaling;
+}
+
+float IR::stddevHistory(float mean, uint8_t lateral) {
+    float stddev = 0.0;
+    if (lateral) {
+        for (uint8_t i = 0; i < sizeof(this->latHistory); i++) {
+            stddev += pow(this->latHistory[i] - mean, 2);
+        }
+        return sqrt(stddev / sizeof(this->latHistory));
+    } else {
+        for (uint8_t i = 0; i < sizeof(this->history); i++) {
+            stddev += pow(this->history[i] - mean, 2);
+
+            return sqrt(stddev / sizeof(this->history));
+        }
+    }
 }
 
 float IR::totalSensorAvg() {
@@ -137,8 +164,12 @@ float IR::totalSensorAvg() {
     return sum / sizeof(pins);
 }
 
-void IR::getReadings(uint8_t anglePos) {
-    this->history[anglePos] = IR::totalSensorAvg();
+void IR::getReadings(uint8_t anglePos, uint8_t lateral) {
+    if (lateral) {
+        this->latHistory[anglePos] = IR::totalSensorAvg();
+    } else {
+        this->history[anglePos] = IR::totalSensorAvg();
+    }
 }
 
 float IR::readIR(uint8_t pin) {

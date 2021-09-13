@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <math.h>
+#include <AccelStepper.h>
 
 #include "../motor/motor.h"
 
@@ -28,7 +29,7 @@
 #define IR8_PIN                 PIN_PA2
 
 #define LONGITDUINAL            0
-#define LATIDUINAL              1
+#define LATITUDINAL             1
 
 class Laser {
     public:
@@ -71,5 +72,7 @@ class IR {
         void getReadings(uint8_t anglePos, uint8_t lateral);
         float zscoreAlgo(float scaling, uint8_t& valid);
 };
+
+void move(AccelStepper& turret, uint8_t step);
 
 #endif /*TURRET_H_ */

@@ -19,7 +19,7 @@ void rotateCW(AccelStepper& left, AccelStepper& right, uint8_t angle) {
 	right.enableOutputs();
 	left.move(steps);
 	right.move(-steps);
-	while (!left.run() || !right.run());
+	while (left.run() || right.run());
 	left.disableOutputs();
 	right.disableOutputs();
 }
@@ -31,7 +31,7 @@ void rotateCCW(AccelStepper& left, AccelStepper& right, uint8_t angle) {
 	right.enableOutputs();
 	left.move(-steps);
 	right.move(steps);
-	while (!left.run() || !right.run()); 
+	while (left.run() || right.run()); 
 	left.disableOutputs();
 	right.disableOutputs();
 }
@@ -62,7 +62,7 @@ void stepCW(AccelStepper& left, AccelStepper& right, int steps) {
 	right.enableOutputs();
 	left.move(steps);
 	right.move(-steps);
-	while (!left.run() || !right.run());
+	while (left.run() || right.run());
 	left.disableOutputs();
 	right.disableOutputs();
 }
@@ -72,7 +72,7 @@ void stepCCW(AccelStepper& left, AccelStepper& right, int steps) {
 	right.enableOutputs();
 	left.move(-steps);
 	right.move(steps);
-	while (!left.run() || !right.run());
+	while (left.run() || right.run());
 	left.disableOutputs();
 	right.disableOutputs();
 }

@@ -39,12 +39,6 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
     uint8_t BASE_STEP_INTERVAL = 3;  // Provides samples at 0.5deg
     uint8_t TURRET_STEP_INTERVAL = 6; // Provides samples at 0.5deg
     float SCALING = (BASE_STEP_INTERVAL * 360 / STEPS_PER_REV_FULLSTEP);
-    // Obtain average samples readings every 0.5deg
-    // Every 90 degrees find maximum reading and check difference relative to noise
-    //  --> if contrast between noise and max reading > this->sensativity
-    //  --> go to that step position or angle.
-    //  --> then do a longitduinal search for largest spike
-    // Every 90 degree reset everything to 0 and restart from first step again
     while (1) {
         IR::getReadings(readingCount, LONGITDUINAL);
         stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
@@ -61,19 +55,21 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
                 float currTurretAngle = 0;
                 uint8_t latReadingCount = 0; 
                 while(1) {
-                    IR::getReadings(latReadingCount, LATIDUINAL);
+                    IR::getReadings(latReadingCount, LATITUDINAL);
                     // TODO: Write turret code to move turret Stepper around 
+                    moveTurret(turret, TURRET_STEP_INTERVAL);
                     if (currTurretAngle >= 60) {
                         float turretMaxValAngle = IR::maxLatHistory(TURRET_SCALING);
                         // now we move to the max value angle and fire laser
                         // TODO: Add the moving code
+                        int moveTurretSteps = (TURRET_STEP_INTERVAL / TURRET_SCALING) * (currTurretAngle - turretMaxValAngle);
+                        moveTurret(turret, -moveTurretSteps); // Negative sign to indicate move down
                         laser.shootLaser();
                         memset(this->latHistory, 0, sizeof(float)*sizeof(this->latHistory));
                         break;
                     }
                     currTurretAngle += TURRET_SCALING;
                 }
-
                 // Move slightly away from target then reset parameters
                 rotateCW(lstepper, rstepper, 10);
             }
@@ -218,4 +214,11 @@ float IR::lvalues(bool inner=false) {
         count += 2;
     }
     return (sum / count);
+}
+
+void moveTurret(AccelStepper& turret, uint8_t step) {
+    turret.enableOutputs();
+    turret.move(step);
+    while(turret.run());
+    turret.disableOutputs();
 }

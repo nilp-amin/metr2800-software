@@ -33,9 +33,9 @@
 #define TURRET_PIN_4			            PIN_PB0
 
 
-void rotateCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
-void rotateCCW(AccelStepper& left, AccelStepper& right, uint8_t angle);
-void moveForward(AccelStepper& left, AccelStepper& right, uint8_t distance);
+void rotateCW(AccelStepper& left, AccelStepper& right, float angle);
+void rotateCCW(AccelStepper& left, AccelStepper& right, float angle);
+void moveForward(AccelStepper& left, AccelStepper& right, int distance);
 bool move(AccelStepper& left, AccelStepper& right, int angle, int distance);
 void stepCW(AccelStepper& left, AccelStepper& right, int steps);
 void stepCCW(AccelStepper& left, AccelStepper& right, int steps);

@@ -1,6 +1,6 @@
 #include "turret.h"
 
-Laser::Laser(uint8_t sigPin, uint8_t onTime) {
+Laser::Laser(uint8_t sigPin, long onTime) {
      trig = sigPin;
      _delay = onTime;
      pinMode(trig, OUTPUT);
@@ -69,6 +69,7 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
                         break;
                     }
                     currTurretAngle += TURRET_SCALING;
+                    latReadingCount++;
                 }
                 // Move slightly away from target then reset parameters
                 rotateCW(lstepper, rstepper, 10);
@@ -90,10 +91,10 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
 float IR::zscoreAlgo(float scaling, uint8_t& isValid) {
     float max = 0;
     float currVal = 0;
-    uint8_t maxIndex = 0;
+    uint16_t maxIndex = 0;
     float baseline = IR::historyAvg();
     // We first find max value and its corresponding index
-    for (uint8_t i = 0; i < sizeof(this->history); i++) {
+    for (uint16_t i = 0; i < sizeof(this->history)/sizeof(this->history[0]); i++) {
         currVal = this->history[i];
         if (currVal > max) {
             max = currVal;
@@ -111,21 +112,21 @@ float IR::zscoreAlgo(float scaling, uint8_t& isValid) {
 }
 
 float IR::historyAvg() {
-    int sum = 0;
+    long sum = 0;
     float smoothed[sizeof(this->history)];
     memset(smoothed, 0, sizeof(float)*sizeof(this->history));
-    for (uint8_t i = 0; i < sizeof(this->history); i++) {
+    for (uint16_t i = 0; i < sizeof(this->history)/sizeof(this->history[0]); i++) {
         sum += this->history[i];
     }
-    return sum / sizeof(this->history);
+    return sum / (sizeof(this->history)/sizeof(this->history[0]));
 }
 
-float IR::maxLatHistory(uint8_t scaling) {
+float IR::maxLatHistory(float scaling) {
     int max = 0;
     int curr = 0;
     uint8_t maxIndex = 0;
-    for (uint8_t i = 0; i < sizeof(this->latHistory); i++) {
-        curr = this->latHistory[i];
+    for (uint8_t i = 0; i < sizeof(latHistory)/(sizeof(latHistory[0])); i++) {
+        curr = latHistory[i];
         if (curr > max) {
             max = curr;
             maxIndex = i;
@@ -137,17 +138,18 @@ float IR::maxLatHistory(uint8_t scaling) {
 float IR::stddevHistory(float mean, uint8_t lateral) {
     float stddev = 0.0;
     if (lateral) {
-        for (uint8_t i = 0; i < sizeof(this->latHistory); i++) {
+        for (uint16_t i = 0; i < sizeof(this->latHistory); i++) {
             stddev += pow(this->latHistory[i] - mean, 2);
         }
         return sqrt(stddev / sizeof(this->latHistory));
     } else {
-        for (uint8_t i = 0; i < sizeof(this->history); i++) {
+        for (uint16_t i = 0; i < sizeof(this->history); i++) {
             stddev += pow(this->history[i] - mean, 2);
 
             return sqrt(stddev / sizeof(this->history));
         }
     }
+    return 0;
 }
 
 float IR::totalSensorAvg() {
@@ -157,7 +159,7 @@ float IR::totalSensorAvg() {
         this->readings[i] = val;
         sum += val;
     }
-    return sum / sizeof(pins);
+    return sum / (sizeof(pins)/sizeof(pins[0]));
 }
 
 void IR::getReadings(uint8_t anglePos, uint8_t lateral) {
@@ -176,47 +178,7 @@ float IR::readIR(uint8_t pin) {
     return (total / this->samples);
 }
 
-float IR::tvalues(bool inner=false) {
-    uint8_t count = 2;
-    int sum = this->readings[0] + this->readings[1];
-    if (inner) {
-        sum += this->readings[4] + this->readings[5];
-        count += 2;
-    }
-    return (sum / count); // change division number if more included
-}
-
-float IR::bvalues(bool inner=false) {
-    uint8_t count = 2;
-    int sum = this->readings[2] + this->readings[3];
-    if (inner) {
-        sum += this->readings[6] + this->readings[7];
-        count += 2;
-    }
-    return (sum / count);
-}
-
-float IR::rvalues(bool inner=false) {
-    uint8_t count = 2;
-    int sum = this->readings[1] + this->readings[2];
-    if (inner) {
-        sum += this->readings[5] + this->readings[6];
-        count += 2;
-    }
-    return (sum / count);
-}
-
-float IR::lvalues(bool inner=false) {
-    uint8_t count = 2;
-    int sum = this->readings[0] + this->readings[3];
-    if (inner) {
-        sum += this->readings[4] + this->readings[7];
-        count += 2;
-    }
-    return (sum / count);
-}
-
-void moveTurret(AccelStepper& turret, uint8_t step) {
+void moveTurret(AccelStepper& turret, long step) {
     turret.enableOutputs();
     turret.move(step);
     while(turret.run());

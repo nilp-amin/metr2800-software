@@ -1,49 +1,67 @@
 #include "motor.h"
 
 // Private scope
-int angleToSteps(uint8_t angle);
+long angleToSteps(float angle);
 
-int angleToSteps(uint8_t angle) {
-	return (angle * STEPS_PER_REV_FULLSTEP / 360);
+long angleToSteps(float angle) {
+	return ((long)angle * STEPS_PER_REV_FULLSTEP / 360);
 }
 
-int distanceToSteps(uint8_t distance) {
+long distanceToSteps(int distance) {
 	// base off wheel diameter
-	// radius wheel = 60mm
-	return (int) (distance * STEPS_PER_REV_FULLSTEP)/(2 * M_PI * 3);
+	// Radius of wheel = 30mm
+	return  ((long)distance * STEPS_PER_REV_FULLSTEP)/(2 * M_PI * 3);
 }
 
 // Blocking code
-void rotateCW(AccelStepper& left, AccelStepper& right, uint8_t angle) {
+void rotateCW(AccelStepper& left, AccelStepper& right, float angle) {
 	int steps = angleToSteps(angle);
 	left.enableOutputs();
 	right.enableOutputs();
 	left.move(steps);
 	right.move(-steps);
-	while (left.run() || right.run());
+    while (1) {
+        left.run();
+        right.run();
+        if (!left.run() && !right.run()) {
+            break;
+        }
+    }
 	left.disableOutputs();
 	right.disableOutputs();
 }
 
 // Blocking code
-void rotateCCW(AccelStepper& left, AccelStepper& right, uint8_t angle) {
+void rotateCCW(AccelStepper& left, AccelStepper& right, float angle) {
 	int steps = angleToSteps(angle);
 	left.enableOutputs();
 	right.enableOutputs();
 	left.move(-steps);
 	right.move(steps);
-	while (left.run() || right.run()); 
+    while (1) {
+        left.run();
+        right.run();
+        if (!left.run() && !right.run()) {
+            break;
+        }
+    }
 	left.disableOutputs();
 	right.disableOutputs();
 }
 
-void moveForward(AccelStepper &left, AccelStepper &right, uint8_t distance) {
-	int steps = distanceToSteps(distance);
+void moveForward(AccelStepper &left, AccelStepper &right, int distance) {
+	long steps = distanceToSteps(distance);
 	left.enableOutputs();
 	right.enableOutputs();
 	left.move(steps);
 	right.move(steps);
-	while (left.run() || right.run()); 
+    while (1) {
+        left.run();
+        right.run();
+        if (!left.run() && !right.run()) {
+            break;
+        }
+    }
 	left.disableOutputs();
 	right.disableOutputs();
 }

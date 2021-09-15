@@ -1,13 +1,11 @@
 #include "navigation.h"
 
 float distanceCentre(int x, int y) {
-	float value = sqrt(pow((50-x),2) + pow((50-y),2));
-	return value;
+	return (float)sqrt(pow((50-x),2) + pow((50-y),2));
 }
 
 float angleCentre(int x, int y) {
-	float angle = atan((50-y)/(50-x));
-	return angle;
+    return (float)atan2((50-y), (50-x));
 }
 
 /*int turnAngle(int first, int second, int angleSquare) {
@@ -24,25 +22,28 @@ float angleCentre(int x, int y) {
 }*/
 
 void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, AccelStepper &right) {
-	int dist[36]; // calibrate array size, will be based on move angle 
-	int dist2[36];
-	int moveAngle = 5;
-	for (int i=0; i<50; i++) {
-		rotateCW(left, right, 5);
-		dist[i] = frontSense.read() + 2; // +2 accounts for distance to centre of robot
-		dist2[i] = backSense.read() + 2;
+	int moveAngle = 10;
+	int dist[180/moveAngle]; // calibrate array size, will be based on move angle 
+	int dist2[180/moveAngle];
+	for (uint16_t i=0; i<sizeof(dist)/sizeof(dist[0]); i++) {
+		rotateCW(left, right, moveAngle);
+		dist[i] = frontSense.read() + 7; // +2 accounts for distance to centre of robot
+		dist2[i] = backSense.read() + 7;
 	}
 	
-	int angleToSquare;
+	//int angleToSquare;
 	int currentCoord[2];
-	for (int i=0; i < sizeof(dist); i++) {
-		if (dist[i] + dist2[i] > 98  && dist[i] + dist2[i] < 101) { 
-			if (dist[i+90/moveAngle] + dist2[i+90/moveAngle] > 98 && dist2[i+90/moveAngle] + dist2[i+90/moveAngle] < 101) {
-				angleToSquare = i * moveAngle;
+	for (uint16_t i = 0; i < sizeof(dist)/sizeof(dist[0]); i++) {
+        Serial.println(dist[i] + dist2[i]);
+		if ((dist[i] + dist2[i]) > 97  && (dist[i] + dist2[i]) < 103) { 
+            // TODO: Have to make sure i+90/moveAngle does not overflow
+            int perpIndex = i + (90 / moveAngle);
+			if ((dist[perpIndex] + dist2[perpIndex] > 98) && (dist2[perpIndex] + dist2[perpIndex]) < 101) {
+				//angleToSquare = i * moveAngle;
 				currentCoord[0] = (dist[i] < dist2[i]) ? dist[i] : dist2[i];
-				currentCoord[1] = (dist[i+90/moveAngle] < dist2[i+90/moveAngle]) ? dist[i+90/moveAngle] : dist2[i+90/moveAngle];
+				currentCoord[1] = (dist[perpIndex] < dist2[perpIndex]) ? dist[perpIndex] : dist2[perpIndex];
 				float distCentre = distanceCentre(currentCoord[0], currentCoord[1]);
-				float angle = angleCentre(currentCoord[0], currentCoord[1]); // might need to add 180;
+				float angle = angleCentre(currentCoord[0], currentCoord[1]) + 90; // might need to add 180; (nilp) we need to add 90?
 
 
 				move(left, right, angle, distCentre); 

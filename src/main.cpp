@@ -6,7 +6,7 @@
 #include "../lib/motor/motor.h"
 #include "../lib/turret/turret.h"
 
-//Laser laser(LASER_PIN, 2000UL);
+Laser laser(LASER_PIN, 2000L);
 IR irSensors(IR1_PIN, IR2_PIN, IR3_PIN, IR4_PIN,
              IR5_PIN, IR6_PIN, IR7_PIN, IR8_PIN, 
              100, 100);
@@ -25,54 +25,66 @@ AccelStepper turretStepper(AccelStepper::HALF4WIRE, TURRET_PIN_1,
                            TURRET_PIN_3, TURRET_PIN_2, TURRET_PIN_4, false);
 // AccelStepper stepper(AccelStepper::FULL4WIRE, PIN_PC7, PIN_PC5, PIN_PC6, PIN_PC4);
 
-int run;
-int buttonPin;
-
 void setup() {  
   Serial.begin(9600);
   leftStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
   leftStepper.setAcceleration(500);
 
-  leftStepper.move(2000);
-  leftStepper.setMaxSpeed(500);
-  leftStepper.enableOutputs();
-
   rightStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
   rightStepper.setAcceleration(500);
-  rightStepper.move(2000);
-  rightStepper.enableOutputs();
 
   turretStepper.setMaxSpeed(MAX_SPEED_HALFSTEP);
-  turretStepper.enableOutputs();
   turretStepper.setAcceleration(200);
   turretStepper.setMaxSpeed(1000);
-  turretStepper.move(2000);
-
-  run = 0;
-  buttonPin = PD2;
-  pinMode(buttonPin, INPUT_PULLUP);
-
-  Serial.println("Hello world");
+  turretStepper.setCurrentPosition(0);
+  turretStepper.move(1000);
 }
 
-void checkButton(void) {
-  if(digitalRead(buttonPin) == LOW) {
-  if(run == 0) {
-    run = 255;
-  } else {
-    run = 0;
-  }
-  }
+void lateralSearch(IR& ir, AccelStepper& turret, Laser) {
+    uint8_t TURRET_STEP_INTERVAL = 24; // Provides samples at 0.5deg 6
+    float TURRET_SCALING = ((float)TURRET_STEP_INTERVAL * 360 / STEPS_PER_REV_HALFSTEP);
+    float currTurretAngle = 0;
+    long maxReadingPos = 0;
+    float maxReading = 0;
+    float currReading = 0;
+    uint8_t latReadingCount = 0;
+    while (1) {
+        currReading = ir.totalSensorAvg();
+        if (currReading > maxReading) {
+            maxReading = currReading;
+            maxReadingPos = turretStepper.currentPosition();
+            laser.shootLaser();
+            Serial.println("Max Pos");
+            Serial.println(maxReadingPos);
+        }
+        moveTurret(turret, TURRET_STEP_INTERVAL);
+        if (currTurretAngle >= 40) {
+            // now we move to the max value angle and fire laser
+            //Serial.println(moveTurretSteps);
+            turret.enableOutputs(); 
+            turret.moveTo(maxReadingPos);
+            turret.runToPosition();
+            turret.disableOutputs();
+            laser.shootLaser();
+            break;
+        }
+        currTurretAngle += TURRET_SCALING;
+        latReadingCount++;
+    }
+    turretStepper.enableOutputs();
+    turretStepper.moveTo(0);
+    turretStepper.runToPosition();
+    turretStepper.disableOutputs();
 }
 
 void loop() {
-  checkButton();
-  if(run > 0) {
-    moveForward(leftStepper, rightStepper, 15);
-  }
+  delay(5000);
+  laser.shootLaser();
   //need to scan area and move to centre
-  //moveForward(leftStepper, rightStepper, 15);
-  //locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
-  // create loop to scan for targets
-
+  //moveForward(leftStepper, rightStepper, 60);
+  //rotateCCW(leftStepper, rightStepper, 360);
+  locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
+  //lateralSearch(irSensors, turretStepper, laser);
+  //Serial.println(irSensors.totalSensorAvg());
+  //delay(100);
 }

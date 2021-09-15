@@ -9,6 +9,7 @@ int angleToSteps(uint8_t angle) {
 
 int distanceToSteps(uint8_t distance) {
 	// base off wheel diameter
+	// radius wheel = 60mm
 	;
 }
 
@@ -42,6 +43,9 @@ void moveForward(AccelStepper &left, AccelStepper &right, uint8_t distance) {
 	right.enableOutputs();
 	left.move(steps);
 	right.move(steps);
+	while (left.run() || right.run()); 
+	left.disableOutputs();
+	right.disableOutputs();
 }
 
 // Move and angle and distance

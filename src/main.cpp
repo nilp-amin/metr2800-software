@@ -50,6 +50,8 @@ void setup() {
 void loop() {
 
   //need to scan area and move to centre
-  locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
+  moveForward(leftStepper, rightStepper, 15);
+  //locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
   // create loop to scan for targets
+
 }

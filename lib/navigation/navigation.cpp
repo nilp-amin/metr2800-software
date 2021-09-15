@@ -10,7 +10,7 @@ float angleCentre(int x, int y) {
 	return angle;
 }
 
-/*int rotateAngle(int first, int second, int angleSquare) {
+/*int turnAngle(int first, int second, int angleSquare) {
 	int angle;
 	if (first > 50 & second > 50) {
 		left turn;
@@ -43,7 +43,8 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 				currentCoord[1] = (dist[i+90/moveAngle] < dist2[i+90/moveAngle]) ? dist[i+90/moveAngle] : dist2[i+90/moveAngle];
 				float distCentre = distanceCentre(currentCoord[0], currentCoord[1]);
 				float angle = angleCentre(currentCoord[0], currentCoord[1]); // might need to add 180;
-				
+
+
 				move(left, right, angle, distCentre); 
 				break;
 			}

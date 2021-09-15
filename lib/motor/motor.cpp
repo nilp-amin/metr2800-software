@@ -10,7 +10,7 @@ int angleToSteps(uint8_t angle) {
 int distanceToSteps(uint8_t distance) {
 	// base off wheel diameter
 	// radius wheel = 60mm
-	;
+	return (int) (distance * STEPS_PER_REV_FULLSTEP)/(2 * M_PI * 3);
 }
 
 // Blocking code

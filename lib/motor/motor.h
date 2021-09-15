@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <AccelStepper.h>
+#include <math.h>
 
 #define STEPS_PER_REV_HALFSTEP              4096 
 #define MAX_SPEED_HALFSTEP                  1000 // Reduce for more torque --> less speed
@@ -12,6 +13,7 @@
 
 #define WHEEL_RADIUS			            30 // In mm
 
+#define _USE_MATH_DEFINES
 // Left stepper motor
 #define L_STEPPER_PIN_1			            PIN_PC7
 #define	L_STEPPER_PIN_2			            PIN_PC6

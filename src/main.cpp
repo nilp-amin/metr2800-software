@@ -40,7 +40,7 @@ void setup() {
   turretStepper.move(1000);
 }
 
-void lateralSearch(IR& ir, AccelStepper& turret, Laser) {
+void lateralSearch(IR& ir, AccelStepper& turret, Laser laser) {
     uint8_t TURRET_STEP_INTERVAL = 24; // Provides samples at 0.5deg 6
     float TURRET_SCALING = ((float)TURRET_STEP_INTERVAL * 360 / STEPS_PER_REV_HALFSTEP);
     float currTurretAngle = 0;
@@ -83,8 +83,9 @@ void loop() {
   //need to scan area and move to centre
   //moveForward(leftStepper, rightStepper, 60);
   //rotateCCW(leftStepper, rightStepper, 360);
-  locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
+  //locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
   //lateralSearch(irSensors, turretStepper, laser);
+  irSensors.targetSearch(leftStepper, rightStepper, turretStepper, laser);
   //Serial.println(irSensors.totalSensorAvg());
   //delay(100);
 }

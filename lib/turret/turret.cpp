@@ -35,121 +35,84 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
     turret.setCurrentPosition(0);
 
     float currAngle = 0;
-    uint8_t readingCount = 0;
-    uint8_t BASE_STEP_INTERVAL = 3;  // Provides samples at 0.5deg
-    uint8_t TURRET_STEP_INTERVAL = 6; // Provides samples at 0.5deg
+    uint8_t BASE_STEP_INTERVAL = 12; // provides samples at 2deg
     float SCALING = (BASE_STEP_INTERVAL * 360 / STEPS_PER_REV_FULLSTEP);
-    while (1) {
-        IR::getReadings(readingCount, LONGITDUINAL);
-        stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
-        
-        if (currAngle >= 90) {
-            uint8_t isValid = 0;
-            float maxValAngle = IR::zscoreAlgo(SCALING, isValid);
-            if (isValid) {
-                int moveSteps = (BASE_STEP_INTERVAL / SCALING) * (currAngle - maxValAngle);
-                stepCCW(lstepper, rstepper, moveSteps);
 
-                // Now we do a lateral search
-                float TURRET_SCALING = (TURRET_STEP_INTERVAL * 360 / STEPS_PER_REV_HALFSTEP);
-                float currTurretAngle = 0;
-                uint8_t latReadingCount = 0; 
-                while(1) {
-                    IR::getReadings(latReadingCount, LATITUDINAL);
-                    // TODO: Write turret code to move turret Stepper around 
-                    moveTurret(turret, TURRET_STEP_INTERVAL);
-                    if (currTurretAngle >= 60) {
-                        float turretMaxValAngle = IR::maxLatHistory(TURRET_SCALING);
-                        // now we move to the max value angle and fire laser
-                        // TODO: Add the moving code
-                        int moveTurretSteps = (TURRET_STEP_INTERVAL / TURRET_SCALING) * (currTurretAngle - turretMaxValAngle);
-                        moveTurret(turret, -moveTurretSteps); // Negative sign to indicate move down
-                        laser.shootLaser();
-                        memset(this->latHistory, 0, sizeof(float)*sizeof(this->latHistory));
+    float maxlongReading = 0;
+    float currReading = 0;
+    float lstepperPos = 0;
+    float rstepperPos = 0;
+    while (1) {
+        currReading = IR::totalSensorAvg();
+        if (currReading > maxlongReading) {
+            maxlongReading = currReading;
+            lstepperPos = lstepper.currentPosition();
+            rstepperPos = rstepper.currentPosition();
+        }
+        stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
+
+        if (currAngle >= 90) {
+            // First check if the maxValue is a valid max value
+            if (maxlongReading >= 10) { // TODO: tune this condition
+                lstepper.moveTo(lstepperPos);
+                rstepper.moveTo(rstepperPos);
+                lstepper.enableOutputs();
+                rstepper.enableOutputs();
+                while (1) {
+                    lstepper.run();
+                    rstepper.run();
+                    if (!lstepper.run() && !rstepper.run()) {
                         break;
                     }
-                    currTurretAngle += TURRET_SCALING;
-                    latReadingCount++;
                 }
-                // Move slightly away from target then reset parameters
-                rotateCW(lstepper, rstepper, 10);
+                lstepper.disableOutputs();
+                rstepper.disableOutputs();
+
+                // Do lateral search
+                IR::lateralSearch(turret, laser);
             }
-            currAngle = 0;
-            readingCount = 0;
             lstepper.setCurrentPosition(0);
             rstepper.setCurrentPosition(0);
-            memset(this->history, 0, sizeof(float)*sizeof(this->history));
+            currAngle = 0;
             continue;
         }
-
         currAngle += SCALING;
-        readingCount++;
     }
 }
 
-// naive implementation
-float IR::zscoreAlgo(float scaling, uint8_t& isValid) {
-    float max = 0;
-    float currVal = 0;
-    uint16_t maxIndex = 0;
-    float baseline = IR::historyAvg();
-    // We first find max value and its corresponding index
-    for (uint16_t i = 0; i < sizeof(this->history)/sizeof(this->history[0]); i++) {
-        currVal = this->history[i];
-        if (currVal > max) {
-            max = currVal;
-            maxIndex = i;
+void IR::lateralSearch(AccelStepper& turret, Laser laser) {
+    uint8_t TURRET_STEP_INTERVAL = 24; // Provides samples at 0.5deg 6
+    float TURRET_SCALING = ((float)TURRET_STEP_INTERVAL * 360 / STEPS_PER_REV_HALFSTEP);
+    float currTurretAngle = 0;
+    long maxReadingPos = 0;
+    float maxReading = 0;
+    float currReading = 0;
+    uint8_t latReadingCount = 0;
+
+    while (1) {
+        currReading = IR::totalSensorAvg();
+        if (currReading > maxReading) {
+            maxReading = currReading;
+            maxReadingPos = turret.currentPosition();
+            laser.shootLaser();
         }
-    }
-
-    // Now we check if it is actually a valid spike
-    float stddev = IR::stddevHistory(baseline, LONGITDUINAL);
-    if ((max - baseline) > stddev*this->sensativity) {
-        isValid = 1;
-    }
-
-    return maxIndex * scaling;
-}
-
-float IR::historyAvg() {
-    long sum = 0;
-    float smoothed[sizeof(this->history)];
-    memset(smoothed, 0, sizeof(float)*sizeof(this->history));
-    for (uint16_t i = 0; i < sizeof(this->history)/sizeof(this->history[0]); i++) {
-        sum += this->history[i];
-    }
-    return sum / (sizeof(this->history)/sizeof(this->history[0]));
-}
-
-float IR::maxLatHistory(float scaling) {
-    int max = 0;
-    int curr = 0;
-    uint8_t maxIndex = 0;
-    for (uint8_t i = 0; i < sizeof(latHistory)/(sizeof(latHistory[0])); i++) {
-        curr = latHistory[i];
-        if (curr > max) {
-            max = curr;
-            maxIndex = i;
+        moveTurret(turret, TURRET_STEP_INTERVAL);
+        if (currTurretAngle >= 40) { // TODO: Tune this condition
+            // now we move to the max value angle and fire laser
+            turret.enableOutputs(); 
+            turret.moveTo(maxReadingPos);
+            turret.runToPosition();
+            turret.disableOutputs();
+            laser.shootLaser();
+            break;
         }
+        currTurretAngle += TURRET_SCALING;
+        latReadingCount++;
     }
-    return maxIndex * scaling;
-}
-
-float IR::stddevHistory(float mean, uint8_t lateral) {
-    float stddev = 0.0;
-    if (lateral) {
-        for (uint16_t i = 0; i < sizeof(this->latHistory); i++) {
-            stddev += pow(this->latHistory[i] - mean, 2);
-        }
-        return sqrt(stddev / sizeof(this->latHistory));
-    } else {
-        for (uint16_t i = 0; i < sizeof(this->history); i++) {
-            stddev += pow(this->history[i] - mean, 2);
-
-            return sqrt(stddev / sizeof(this->history));
-        }
-    }
-    return 0;
+    turret.enableOutputs();
+    turret.moveTo(0);
+    turret.runToPosition();
+    turret.disableOutputs();
 }
 
 float IR::totalSensorAvg() {
@@ -160,14 +123,6 @@ float IR::totalSensorAvg() {
         sum += val;
     }
     return sum / (sizeof(pins)/sizeof(pins[0]));
-}
-
-void IR::getReadings(uint8_t anglePos, uint8_t lateral) {
-    if (lateral) {
-        this->latHistory[anglePos] = IR::totalSensorAvg();
-    } else {
-        this->history[anglePos] = IR::totalSensorAvg();
-    }
 }
 
 float IR::readIR(uint8_t pin) {

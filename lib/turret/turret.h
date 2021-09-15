@@ -48,52 +48,16 @@ class IR {
            float sensativity, uint16_t samples);
         float totalSensorAvg();
         void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
+        void lateralSearch(AccelStepper& turret, Laser laser);
 
         float readings[8];
 
-
-        uint16_t minReading = 100;
-        uint16_t samples = 100;
-        uint8_t pins[8];
-        uint16_t stepAngle = 0;
-        float sensativity = 3.19F; // calculated using stddev table
-        float noiseReading = 0.0F;
-        float history[180]; // Reset this every 90deg [0, 90]
-        float latHistory[120]; // Reset this every time target located [0, 60]
-
-        float readIR(uint8_t pin);
-        float tvalues(bool inner=false);
-        float bvalues(bool inner=false);
-        float rvalues(bool inner=false);
-        float lvalues(bool inner=false);
-        float historyAvg();
-        float maxLatHistory(float scaling);
-        float stddevHistory(float mean, uint8_t lateral);
-        void getReadings(uint8_t anglePos, uint8_t lateral);
-        float zscoreAlgo(float scaling, uint8_t& valid);
-
     private:
-        /*
         uint16_t minReading = 100;
         uint16_t samples = 100;
         uint8_t pins[8];
-        uint16_t stepAngle = 0;
-        float sensativity = 3.19F; // calculated using stddev table
-        float noiseReading = 0.0F;
-        float history[180]; // Reset this every 90deg [0, 90]
-        float latHistory[120]; // Reset this every time target located [0, 60]
 
         float readIR(uint8_t pin);
-        float tvalues(bool inner=false);
-        float bvalues(bool inner=false);
-        float rvalues(bool inner=false);
-        float lvalues(bool inner=false);
-        float historyAvg();
-        float maxLatHistory(uint8_t scaling);
-        float stddevHistory(float mean, uint8_t lateral);
-        void getReadings(uint8_t anglePos, uint8_t lateral);
-        float zscoreAlgo(float scaling, uint8_t& valid);
-        */
 };
 
 void moveTurret(AccelStepper& turret, long step);

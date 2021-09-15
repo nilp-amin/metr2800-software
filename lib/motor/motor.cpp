@@ -84,7 +84,13 @@ void stepCW(AccelStepper& left, AccelStepper& right, int steps) {
 	right.enableOutputs();
 	left.move(steps);
 	right.move(-steps);
-	while (left.run() || right.run());
+	while (1) {
+        left.run();
+        right.run();
+        if (!left.run() && !right.run()) {
+            break;
+        }
+    }
 	left.disableOutputs();
 	right.disableOutputs();
 }
@@ -94,7 +100,13 @@ void stepCCW(AccelStepper& left, AccelStepper& right, int steps) {
 	right.enableOutputs();
 	left.move(-steps);
 	right.move(steps);
-	while (left.run() || right.run());
+	while (1) {
+        left.run();
+        right.run();
+        if (!left.run() && !right.run()) {
+            break;
+        }
+	}  
 	left.disableOutputs();
 	right.disableOutputs();
 }

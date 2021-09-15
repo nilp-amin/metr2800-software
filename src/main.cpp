@@ -25,6 +25,9 @@ AccelStepper turretStepper(AccelStepper::HALF4WIRE, TURRET_PIN_1,
                            TURRET_PIN_3, TURRET_PIN_2, TURRET_PIN_4, false);
 // AccelStepper stepper(AccelStepper::FULL4WIRE, PIN_PC7, PIN_PC5, PIN_PC6, PIN_PC4);
 
+int run;
+int buttonPin;
+
 void setup() {  
   Serial.begin(9600);
   leftStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
@@ -44,13 +47,31 @@ void setup() {
   turretStepper.setAcceleration(200);
   turretStepper.setMaxSpeed(1000);
   turretStepper.move(2000);
+
+  run = 0;
+  buttonPin = PD2;
+  pinMode(buttonPin, INPUT_PULLUP);
+
   Serial.println("Hello world");
 }
 
-void loop() {
+void checkButton(void) {
+  if(digitalRead(buttonPin) == LOW) {
+  if(run == 0) {
+    run = 255;
+  } else {
+    run = 0;
+  }
+  }
+}
 
+void loop() {
+  checkButton();
+  if(run > 0) {
+    moveForward(leftStepper, rightStepper, 15);
+  }
   //need to scan area and move to centre
-  moveForward(leftStepper, rightStepper, 15);
+  //moveForward(leftStepper, rightStepper, 15);
   //locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
   // create loop to scan for targets
 

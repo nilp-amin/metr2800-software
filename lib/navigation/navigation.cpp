@@ -65,7 +65,7 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 		front = frontSense.read() + 7.7; // +2 accounts for distance to centre of robot
 		back = backSense.read() + 7.7;
 
-		if (abs(front - back) < 2.5) {
+		if (abs(front - back) < 3) {
 			if (count == 0) {
 				count += 1;
 				move(left, right, 110, 0);

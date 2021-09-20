@@ -15,7 +15,7 @@ long distanceToSteps(int distance) {
 
 // Blocking code
 void rotateCW(AccelStepper& left, AccelStepper& right, float angle) {
-	int steps = angleToSteps(angle);
+	long steps = angleToSteps(angle);
 	left.enableOutputs();
 	right.enableOutputs();
 	left.move(steps);
@@ -33,7 +33,7 @@ void rotateCW(AccelStepper& left, AccelStepper& right, float angle) {
 
 // Blocking code
 void rotateCCW(AccelStepper& left, AccelStepper& right, float angle) {
-	int steps = angleToSteps(angle);
+	long steps = angleToSteps(angle);
 	left.enableOutputs();
 	right.enableOutputs();
 	left.move(-steps);

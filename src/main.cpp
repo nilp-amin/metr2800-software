@@ -26,8 +26,7 @@ AccelStepper turretStepper(AccelStepper::HALF4WIRE, TURRET_PIN_1,
 // AccelStepper stepper(AccelStepper::FULL4WIRE, PIN_PC7, PIN_PC5, PIN_PC6, PIN_PC4);
 
 void setup() {  
-  Serial.begin(9600);
-  /*
+  //Serial.begin(9600);
   leftStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
   leftStepper.setAcceleration(500);
 
@@ -39,8 +38,7 @@ void setup() {
   turretStepper.setMaxSpeed(1000);
   turretStepper.setCurrentPosition(0);
   turretStepper.move(1000);
-  */
- pinMode(PIN_PD5, OUTPUT);
+  pinMode(PIN_PD5, OUTPUT);
 }
 
 void lateralSearch(IR& ir, AccelStepper& turret, Laser laser) {
@@ -83,13 +81,13 @@ void lateralSearch(IR& ir, AccelStepper& turret, Laser laser) {
 void loop() {
     if (digitalRead(PIN_PD5)) {
         laser.shootLaser();
-    }
   //need to scan area and move to centre
   //moveForward(leftStepper, rightStepper, 60);
   //rotateCCW(leftStepper, rightStepper, 360);
-  //locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
+        locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
   //lateralSearch(irSensors, turretStepper, laser);
   //irSensors.targetSearch(leftStepper, rightStepper, turretStepper, laser);
   //Serial.println(irSensors.totalSensorAvg());
   //delay(100);
+    }
 }

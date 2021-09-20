@@ -55,6 +55,14 @@ void xxlocatexx(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left,
 	return;
 }
 
+bool checkCorner(AccelStepper &left, AccelStepper &right, int front, int back) {
+   if (front > 180 || back > 180) {
+       move(left, right, 90, 0);
+       return true;
+   } 
+   return false;
+}
+
 // DEMO FUNCTONS
 void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, AccelStepper &right) {
 	// move direction of largest until front back are equal
@@ -64,6 +72,11 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 	while(1) {
 		front = frontSense.read() + 7.7; // +2 accounts for distance to centre of robot
 		back = backSense.read() + 7.7;
+
+        if (checkCorner(left, right, front, back)) {
+            front = frontSense.read() + 7.7;
+            back = backSense.read() + 7.7;
+        }
 
 		if (abs(front - back) < 3) {
 			if (count == 0) {
@@ -76,16 +89,22 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 		}
 
 		if (front > back) {
-			while (1) {
+			count = 0;
+            while (1) {
 				if (abs(front - back) < 2.5) {
 					break;
 				}
 				move(left, right, 0, (front-back)/2);
 				front = frontSense.read() + 7; // +2 accounts for distance to centre of robot
 				back = backSense.read() + 7;
+                if (checkCorner(left, right, front, back)) {
+                    front = frontSense.read() + 7.7;
+                    back = backSense.read() + 7.7;
+                }       
 			}
 			
 		} else {
+            count = 0;
 			while(1) {
                 if (abs(front-back) < 2.5) {
 					break;
@@ -93,6 +112,10 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
                 move(left, right, 0, -(back-front)/2);
                 front = frontSense.read() + 7;
                 back = backSense.read() + 7;
+                if (checkCorner(left, right, front, back)) {
+                    front = frontSense.read() + 7.7;
+                    back = backSense.read() + 7.7;
+                }
             }
 		}
 		move(left, right, 150, 0);

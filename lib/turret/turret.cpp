@@ -51,7 +51,7 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
         }
         stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
 
-        if (currAngle >= 90) {
+        if (currAngle >= 100) { // Tune
             // First check if the maxValue is a valid max value
             if (maxlongReading >= 10) { // TODO: tune this condition
                 lstepper.moveTo(lstepperPos);
@@ -94,13 +94,12 @@ void IR::lateralSearch(AccelStepper& turret, Laser laser) {
         if (currReading > maxReading) {
             maxReading = currReading;
             maxReadingPos = turret.currentPosition();
-            laser.shootLaser();
         }
         moveTurret(turret, TURRET_STEP_INTERVAL);
-        if (currTurretAngle >= 40) { // TODO: Tune this condition
+        if (currTurretAngle >= 20) { // TODO: Tune this condition
             // now we move to the max value angle and fire laser
             turret.enableOutputs(); 
-            turret.moveTo(maxReadingPos);
+            turret.moveTo(maxReadingPos - 100);
             turret.runToPosition();
             turret.disableOutputs();
             laser.shootLaser();

@@ -58,26 +58,26 @@ void xxlocatexx(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left,
 // DEMO FUNCTONS
 void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, AccelStepper &right) {
 	// move direction of largest until front back are equal
-	int front;
-	int back;
+	float front;
+	float back;
 	int count = 0;
 	while(1) {
-		front = frontSense.read() + 7; // +2 accounts for distance to centre of robot
-		back = backSense.read() + 7;
+		front = frontSense.read() + 7.7; // +2 accounts for distance to centre of robot
+		back = backSense.read() + 7.7;
 
-		if (abs(front - back) < 3) {
-			if (count = 0) {
+		if (abs(front - back) < 2.5) {
+			if (count == 0) {
 				count += 1;
-				move(left, right, 90, 0);
+				move(left, right, 110, 0);
 				continue;
-			} else if (count = 1) {
+			} else if (count == 1) {
 				break;
 			}			
 		}
 
 		if (front > back) {
 			while (1) {
-				if (abs(front - back) < 3) {
+				if (abs(front - back) < 2.5) {
 					break;
 				}
 				move(left, right, 0, (front-back)/2);
@@ -86,11 +86,15 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 			}
 			
 		} else {
-			if (abs(front-back) < 3) {
+			while(1) {
+                if (abs(front-back) < 2.5) {
 					break;
 				}
-			move(left, right, 0, -(back-front)/2);
+                move(left, right, 0, -(back-front)/2);
+                front = frontSense.read() + 7;
+                back = backSense.read() + 7;
+            }
 		}
-		move(left, right, 90, 0);
+		move(left, right, 150, 0);
 	}
 }

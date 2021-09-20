@@ -27,6 +27,7 @@ AccelStepper turretStepper(AccelStepper::HALF4WIRE, TURRET_PIN_1,
 
 void setup() {  
   Serial.begin(9600);
+  /*
   leftStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
   leftStepper.setAcceleration(500);
 
@@ -38,6 +39,8 @@ void setup() {
   turretStepper.setMaxSpeed(1000);
   turretStepper.setCurrentPosition(0);
   turretStepper.move(1000);
+  */
+ pinMode(PIN_PD5, OUTPUT);
 }
 
 void lateralSearch(IR& ir, AccelStepper& turret, Laser laser) {
@@ -53,16 +56,16 @@ void lateralSearch(IR& ir, AccelStepper& turret, Laser laser) {
         if (currReading > maxReading) {
             maxReading = currReading;
             maxReadingPos = turretStepper.currentPosition();
-            laser.shootLaser();
-            Serial.println("Max Pos");
-            Serial.println(maxReadingPos);
+            //laser.shootLaser();
+            //Serial.println("Max Pos");
+            //Serial.println(maxReadingPos);
         }
         moveTurret(turret, TURRET_STEP_INTERVAL);
-        if (currTurretAngle >= 40) {
+        if (currTurretAngle >= 20) {
             // now we move to the max value angle and fire laser
             //Serial.println(moveTurretSteps);
             turret.enableOutputs(); 
-            turret.moveTo(maxReadingPos);
+            turret.moveTo(maxReadingPos - 100);
             turret.runToPosition();
             turret.disableOutputs();
             laser.shootLaser();
@@ -78,14 +81,15 @@ void lateralSearch(IR& ir, AccelStepper& turret, Laser laser) {
 }
 
 void loop() {
-  delay(5000);
-  laser.shootLaser();
+    if (digitalRead(PIN_PD5)) {
+        laser.shootLaser();
+    }
   //need to scan area and move to centre
   //moveForward(leftStepper, rightStepper, 60);
   //rotateCCW(leftStepper, rightStepper, 360);
   //locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
   //lateralSearch(irSensors, turretStepper, laser);
-  irSensors.targetSearch(leftStepper, rightStepper, turretStepper, laser);
+  //irSensors.targetSearch(leftStepper, rightStepper, turretStepper, laser);
   //Serial.println(irSensors.totalSensorAvg());
   //delay(100);
 }

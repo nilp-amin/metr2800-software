@@ -46,8 +46,9 @@ class IR {
         IR(uint8_t ir1, uint8_t ir2, uint8_t ir3, uint8_t ir4,
            uint8_t ir5, uint8_t ir6, uint8_t ir7, uint8_t ir8, 
            float sensativity, uint16_t samples);
-        float totalSensorAvg();
+        float totalSensorAvg(uint16_t _samples);
         void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
+        void targetSearchv2(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
         void lateralSearch(AccelStepper& turret, Laser laser);
 
         float readings[8];
@@ -57,7 +58,8 @@ class IR {
         uint16_t samples = 100;
         uint8_t pins[8];
 
-        float readIR(uint8_t pin);
+        float readIR(uint8_t pin, uint16_t _samples);
+        void slowSweep(AccelStepper& lstepper, AccelStepper& rstepper, float sweep);
 };
 
 void moveTurret(AccelStepper& turret, long step);

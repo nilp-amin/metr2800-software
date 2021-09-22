@@ -1,0 +1,12 @@
+Target Search Algo:
+1. Turn in increments of 10 deg
+2. Update max value and corresp step pos
+3. At 90deg check if curr_max > threshold
+4. If it is move to corresp step pos
+5. Check +- 10deg around point to find tune max value
+6. Go to new max after this sweep
+7. Start lateral search
+8. Sweep 0deg to 40deg in steps of 0.5deg steps
+9. Go to curr_max_lat stepper pos
+10. Fire laser at target for 2sec
+11. Start next target search

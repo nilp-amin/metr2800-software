@@ -12,6 +12,8 @@
 #define MAX_SPEED_FULLSTEP                  500 // Reduce for more torque  --> less speed
 
 #define WHEEL_RADIUS			            30 // In mm
+#define REL_WHEEL_POS                       50 // In mm --> remeasure
+#define DRIVE_ACCEL                         100 // Tune this value (steps/s/s)
 
 #define _USE_MATH_DEFINES
 // Left stepper motor
@@ -33,9 +35,11 @@
 #define TURRET_PIN_4			            PIN_PB0
 
 
+// TODO:: Have to clean these functions due to DRY
 void rotateCW(AccelStepper& left, AccelStepper& right, float angle);
 void rotateCCW(AccelStepper& left, AccelStepper& right, float angle);
 void moveForward(AccelStepper& left, AccelStepper& right, int distance);
+void multiMoveTo(AccelStepper& left, AccelStepper& right, long stepL, long stepR);
 bool move(AccelStepper& left, AccelStepper& right, int angle, int distance);
 void stepCW(AccelStepper& left, AccelStepper& right, int steps);
 void stepCCW(AccelStepper& left, AccelStepper& right, int steps);

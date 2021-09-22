@@ -5,10 +5,8 @@ long angleToSteps(float angle);
 
 // Steps required to rotate the entire robot by angle
 long angleToSteps(float angle) {
-	uint8_t r = 30; // Radius of wheels
-	uint8_t R = 50;  // Radius of wheel position relative to centre of robot
 	//return ((long)angle * STEPS_PER_REV_FULLSTEP / 360);
-	return ((long)angle * 256 * R / (45 * r));
+	return (long)(angle * 256 * REL_WHEEL_POS / (45.0f * WHEEL_RADIUS));
 }
 
 long distanceToSteps(int distance) {
@@ -68,6 +66,22 @@ void moveForward(AccelStepper &left, AccelStepper &right, int distance) {
     }
 	left.disableOutputs();
 	right.disableOutputs();
+}
+
+void multiMoveTo(AccelStepper& left, AccelStepper& right, long stepL, long stepR) {
+	left.moveTo(stepL);
+	right.moveTo(stepR);
+	left.enableOutputs();
+	right.enableOutputs();
+	while (1) {
+		left.run();
+		right.run();
+		if (!left.run() && !right.run()) {
+			break;
+		}
+	}
+	left.disableOutputs();
+    right.disableOutputs();
 }
 
 // Move and angle and distance

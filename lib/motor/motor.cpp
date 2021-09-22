@@ -5,10 +5,10 @@ long angleToSteps(float angle);
 
 // Steps required to rotate the entire robot by angle
 long angleToSteps(float angle) {
-	r = 30 // Radius of wheels
-	R = 50  // Radius of wheel position relative to centre of robot
+	uint8_t r = 30; // Radius of wheels
+	uint8_t R = 50;  // Radius of wheel position relative to centre of robot
 	//return ((long)angle * STEPS_PER_REV_FULLSTEP / 360);
-	return ((long)angle * 256 * R / (45 * r))
+	return ((long)angle * 256 * R / (45 * r));
 }
 
 long distanceToSteps(int distance) {

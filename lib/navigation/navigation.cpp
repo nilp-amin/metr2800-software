@@ -89,9 +89,8 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 		}
 
 		if (front > back) {
-			count = 0;
             while (1) {
-				if (abs(front - back) < 2.5) {
+				if (abs(front - back) < 3) {
 					break;
 				}
 				move(left, right, 0, (front-back)/2);
@@ -104,9 +103,8 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 			}
 			
 		} else {
-            count = 0;
 			while(1) {
-                if (abs(front-back) < 2.5) {
+                if (abs(front-back) < 3) {
 					break;
 				}
                 move(left, right, 0, -(back-front)/2);

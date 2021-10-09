@@ -85,7 +85,7 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
     }
 }
 
-void IR::lateralSearch(AccelStepper& turret, Laser laser) {
+void IR::lateralSearch2(AccelStepper& turret, Laser laser) {
     uint8_t TURRET_STEP_INTERVAL = 5; // Provides samples at 0.8deg
     float TURRET_SCALING = ((float)TURRET_STEP_INTERVAL * 360 / STEPS_PER_REV_HALFSTEP);
     float currTurretAngle = 0;
@@ -120,11 +120,42 @@ void IR::lateralSearch(AccelStepper& turret, Laser laser) {
     turret.disableOutputs();
 }
 
+void IR::lateralSearch(AccelStepper& turret, Laser laser) {
+    float currTurretAngle = 0;
+    long maxReadingPos = 0;
+    float maxReading = 0;
+    float currReading = 0;
+
+    // First want to move to home configuration and then sweep 50 degrees
+    uint8_t sweepAngle = 50;
+    uint8_t lowThreshold = 10;
+
+    homeTurret(turret);
+    turret.enableOutputs();
+    turret.move((long) sweepAngle * STEPS_PER_REV_HALFSTEP / 360);
+    while(turret.run()) {
+        /* Could even make a threshold here where it does not sweep after a certain decrease */
+        currReading = IR::totalSensorAvg(this->samples);
+        if (currReading > maxReading) {
+            maxReading = currReading;
+            maxReadingPos = turret.currentPosition();
+        }
+        if (maxReading - lowThreshold > currReading) {
+            break;
+        }
+    }
+    turret.moveTo(maxReadingPos);
+    turret.runSpeedToPosition();
+    turret.disableOutputs();
+    moveTurretSensePose(turret);
+}
+
 void IR::targetSearchv2(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser) {
     // Reset stepper positions for logic
     lstepper.setCurrentPosition(0);
     rstepper.setCurrentPosition(0);
     turret.setCurrentPosition(0);
+    moveTurretSensePose(turret);
 
     // Reset stepper movement to constant velocity
     // TODO:: Check if this is constant acceleration or not
@@ -241,9 +272,26 @@ float IR::readIR(uint8_t pin, uint16_t _samples) {
     return (total / _samples);
 }
 
+/* We could read IR array as we step*/
 void moveTurret(AccelStepper& turret, long step) {
     turret.enableOutputs();
     turret.move(step);
     while(turret.run());
+    turret.disableOutputs();
+}
+
+/* Sense position is at 30 degrees */
+void moveTurretSensePose(AccelStepper& turret) {
+    uint8_t _angle = 30;
+    turret.enableOutputs();
+    turret.move((long) _angle * STEPS_PER_REV_HALFSTEP / 360);
+    while(turret.run());
+    turret.disableOutputs();
+}
+
+void homeTurret(AccelStepper& turret) {
+    turret.enableOutputs();
+    turret.moveTo(0);
+    turret.runToPosition();
     turret.disableOutputs();
 }

@@ -35,6 +35,7 @@ class Laser {
     public:
         Laser(uint8_t sigPin, long onTime);
         void shootLaser();
+        void constantOn();
     
     private:
         uint8_t trig;
@@ -55,10 +56,11 @@ class IR {
 
     private:
         uint16_t minReading = 100;
-        uint16_t samples = 100;
+        uint16_t samples = 10;
         uint8_t pins[8];
 
         float readIR(uint8_t pin, uint16_t _samples);
+        float calculateStepAngle(uint8_t interval);
         void slowSweep(AccelStepper& lstepper, AccelStepper& rstepper, float sweep);
 };
 

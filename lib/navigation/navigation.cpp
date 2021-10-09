@@ -21,43 +21,9 @@ float angleCentre(int x, int y) {
 	}
 }*/
 
-void xxlocatexx(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, AccelStepper &right) {
-	int moveAngle = 10;
-	int dist[180/moveAngle]; // calibrate array size, will be based on move angle 
-	int dist2[180/moveAngle];
-	for (uint16_t i=0; i<sizeof(dist)/sizeof(dist[0]); i++) {
-		rotateCW(left, right, moveAngle);
-		dist[i] = frontSense.read() + 7; // +2 accounts for distance to centre of robot
-		dist2[i] = backSense.read() + 7;
-	}
-	
-	//int angleToSquare;
-	int currentCoord[2];
-	for (uint16_t i = 0; i < sizeof(dist)/sizeof(dist[0]); i++) {
-        Serial.println(dist[i] + dist2[i]);
-		if ((dist[i] + dist2[i]) > 97  && (dist[i] + dist2[i]) < 103) { 
-            // TODO: Have to make sure i+90/moveAngle does not overflow
-            int perpIndex = i + (90 / moveAngle);
-			if ((dist[perpIndex] + dist2[perpIndex] > 98) && (dist2[perpIndex] + dist2[perpIndex]) < 101) {
-				//angleToSquare = i * moveAngle;
-				currentCoord[0] = (dist[i] < dist2[i]) ? dist[i] : dist2[i];
-				currentCoord[1] = (dist[perpIndex] < dist2[perpIndex]) ? dist[perpIndex] : dist2[perpIndex];
-				float distCentre = distanceCentre(currentCoord[0], currentCoord[1]);
-				float angle = angleCentre(currentCoord[0], currentCoord[1]) + 90; // might need to add 180; (nilp) we need to add 90?
-
-
-				move(left, right, angle, distCentre); 
-				break;
-			}
-		}
-	}
-	// might be best to have these values stored in a struct, and alter a struct in main. 
-	return;
-}
-
 bool checkCorner(AccelStepper &left, AccelStepper &right, int front, int back) {
-   if (front > 180 || back > 180) {
-       move(left, right, 90, 0);
+   if (front > 100 || back > 100) {
+       move(left, right, 45, 0);
        return true;
    } 
    return false;
@@ -80,10 +46,11 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 
 		if (abs(front - back) < 3) {
 			if (count == 0) {
+                // TODO: will never reach this because of the counts, just for testing
 				count += 1;
 				move(left, right, 45, 0);
 				continue;
-			} else if (count == 1) {
+			} else if (count >= 1) {
 				break;
 			}			
 		}
@@ -91,6 +58,7 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 		if (front > back) {
             while (1) {
 				if (abs(front - back) < 3) {
+                    count += 1;
 					break;
 				}
 				move(left, right, 0, (front-back)/2);
@@ -105,6 +73,7 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
 		} else {
 			while(1) {
                 if (abs(front-back) < 3) {
+                    count += 1;
 					break;
 				}
                 move(left, right, 0, -(back-front)/2);
@@ -116,6 +85,6 @@ void locate(Ultrasonic frontSense, Ultrasonic backSense, AccelStepper &left, Acc
                 }
             }
 		}
-		move(left, right, 90, 0);
+		move(left, right, 95, 0);
 	}
 }

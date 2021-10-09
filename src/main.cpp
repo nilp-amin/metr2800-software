@@ -27,7 +27,7 @@ AccelStepper turretStepper(AccelStepper::HALF4WIRE, TURRET_PIN_1,
 // AccelStepper stepper(AccelStepper::FULL4WIRE, PIN_PC7, PIN_PC5, PIN_PC6, PIN_PC4);
 
 void setup() {  
-  //Serial.begin(9600);
+  Serial.begin(9600);
   leftStepper.setMaxSpeed(MAX_SPEED_FULLSTEP);
   leftStepper.setAcceleration(DRIVE_ACCEL);
 
@@ -47,5 +47,11 @@ void loop() {
         laser.shootLaser();
         locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
         irSensors.targetSearchv2(leftStepper, rightStepper, turretStepper, laser);
+     /*
+        laser.constantOn();
+       while(1) {
+       Serial.println(irSensors.totalSensorAvg(100));
+       }
+       */
     }
 }

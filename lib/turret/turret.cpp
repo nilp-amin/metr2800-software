@@ -12,6 +12,10 @@ void Laser::shootLaser() {
     digitalWrite(trig, LOW);
 }
 
+void Laser::constantOn() {
+    digitalWrite(trig, HIGH);
+}
+
 IR::IR(uint8_t ir1, uint8_t ir2, uint8_t ir3, uint8_t ir4,
        uint8_t ir5, uint8_t ir6, uint8_t ir7, uint8_t ir8, 
        float sensativity, uint16_t samples) {
@@ -58,7 +62,7 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
 
         if (currAngle >= 100) { // Tune
             // First check if the maxValue is a valid max value
-            if (maxlongReading >= 10) { // TODO: tune this condition
+            if (maxlongReading >= 20) { // TODO: tune this condition
                 lstepper.moveTo(lstepperPos);
                 rstepper.moveTo(rstepperPos);
                 lstepper.enableOutputs();
@@ -86,7 +90,7 @@ void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepp
 }
 
 void IR::lateralSearch(AccelStepper& turret, Laser laser) {
-    uint8_t TURRET_STEP_INTERVAL = 5; // Provides samples at 0.8deg
+    uint8_t TURRET_STEP_INTERVAL = 5; // Provides samples at 0.8deg --> 5
     float TURRET_SCALING = ((float)TURRET_STEP_INTERVAL * 360 / STEPS_PER_REV_HALFSTEP);
     float currTurretAngle = 0;
     long maxReadingPos = 0;
@@ -94,6 +98,7 @@ void IR::lateralSearch(AccelStepper& turret, Laser laser) {
     float currReading = 0;
     uint8_t latReadingCount = 0;
 
+    //laser.constantOn();
     while (1) {
         currReading = IR::totalSensorAvg(this->samples);
         if (currReading > maxReading) {
@@ -104,7 +109,7 @@ void IR::lateralSearch(AccelStepper& turret, Laser laser) {
         if (currTurretAngle >= 20) { // TODO: Tune this condition
             // now we move to the max value angle and fire laser
             turret.enableOutputs(); 
-            turret.moveTo(maxReadingPos - 100);
+            turret.moveTo(maxReadingPos - 90);
             turret.runToPosition();
             turret.disableOutputs();
             laser.shootLaser();
@@ -127,22 +132,34 @@ void IR::targetSearchv2(AccelStepper& lstepper, AccelStepper& rstepper, AccelSte
     turret.setCurrentPosition(0);
 
     // Reset stepper movement to constant velocity
-    // TODO:: Check if this is constant acceleration or not
     lstepper.setAcceleration(MAX_SPEED_FULLSTEP);
     rstepper.setAcceleration(MAX_SPEED_FULLSTEP);
 
     uint8_t BASE_STEP_INTERVAL = 57; // provides samples at 10deg
 
     float currAngle = 0;
-    float stepAngle = (BASE_STEP_INTERVAL * 360 / STEPS_PER_REV_FULLSTEP);
+    float stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
 
     float maxlongReading = 0;
     float currReading = 0;
+    float threshold = 1.5; // TODO: tune this condition
     long lstepperPos = 0;
     long rstepperPos = 0;
+    uint8_t fineStepActive = 0;
     while (1) {
         currReading = IR::totalSensorAvg(this->samples);
+        // TODO: Make the robot move faster when small increases are seen
         if (currReading > maxlongReading) {
+            /*
+            if (abs(currReading - maxlongReading) < threshold && !fineStepActive) {
+                BASE_STEP_INTERVAL = 100;
+                stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
+            } else {
+                BASE_STEP_INTERVAL = 57;
+                stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
+                fineStepActive = 1;
+            }
+            */
             maxlongReading = currReading;
             lstepperPos = lstepper.currentPosition();
             rstepperPos = rstepper.currentPosition();
@@ -151,13 +168,21 @@ void IR::targetSearchv2(AccelStepper& lstepper, AccelStepper& rstepper, AccelSte
 
         if (currAngle >= 90) {
             // First check if the maxValue is a valid max value
-            if (maxlongReading >= 10) { // TODO: tune this condition
+            if (maxlongReading >= 20) { // TODO: tune this condition
                 // Move to first max pos
                 multiMoveTo(lstepper, rstepper, lstepperPos, rstepperPos);
                 // Re-sweep area to find accurate pos of maximum 
-                slowSweep(lstepper, rstepper, 10);
+                slowSweep(lstepper, rstepper, 10); // TODO: tune this condition
                 // Do lateral search
                 IR::lateralSearch(turret, laser);
+                rotateCW(lstepper, rstepper, 45);
+                lstepperPos = 0;
+                rstepperPos = 0;
+                maxlongReading = 0;
+                // Reset rotation steps to max after shooting
+                //BASE_STEP_INTERVAL = 100; 
+                //stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
+                //fineStepActive = 0;
             }
             lstepper.setCurrentPosition(0);
             rstepper.setCurrentPosition(0);
@@ -181,8 +206,6 @@ void IR::slowSweep(AccelStepper& lstepper, AccelStepper& rstepper, float sweep) 
     float currReading = 0;
     long lstepperPos = 0;
     long rstepperPos = 0;
-
-    // TODO:: Clean this code after seeing if this works well
 
     // we rotate CCW sweep deg
     while (1) {
@@ -217,10 +240,15 @@ void IR::slowSweep(AccelStepper& lstepper, AccelStepper& rstepper, float sweep) 
             // Move to maximum irridance position 
             currAngle = 0;
             multiMoveTo(lstepper, rstepper, lstepperPos, rstepperPos);
+            // Step a couple degress CW due to slight error
             break;
         }
         currAngle += stepAngle;
     }
+}
+
+float IR::calculateStepAngle(uint8_t interval) {
+    return (interval * 360 / STEPS_PER_REV_FULLSTEP);
 }
 
 float IR::totalSensorAvg(uint16_t _samples) {

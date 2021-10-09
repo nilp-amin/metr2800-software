@@ -9,11 +9,11 @@
 #define MAX_SPEED_HALFSTEP                  1000 // Reduce for more torque --> less speed
 
 #define STEPS_PER_REV_FULLSTEP              2048
-#define MAX_SPEED_FULLSTEP                  500 // Reduce for more torque  --> less speed
+#define MAX_SPEED_FULLSTEP                  700 // Reduce for more torque  --> less speed
 
 #define WHEEL_RADIUS			            30 // In mm
 #define REL_WHEEL_POS                       50 // In mm --> remeasure
-#define DRIVE_ACCEL                         100 // Tune this value (steps/s/s)
+#define DRIVE_ACCEL                         500 // Tune this value (steps/s/s)
 
 #define _USE_MATH_DEFINES
 // Left stepper motor

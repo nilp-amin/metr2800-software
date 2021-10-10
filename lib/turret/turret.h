@@ -49,7 +49,7 @@ class IR {
            float sensativity, uint16_t samples);
         float totalSensorAvg(uint16_t _samples);
         void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
-        void targetSearchv2(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
+        void targetSearchv1(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
         void lateralSearch(AccelStepper& turret, Laser laser);
 
         float readings[8];
@@ -65,5 +65,6 @@ class IR {
 };
 
 void moveTurret(AccelStepper& turret, long step);
-
+void moveTurretSensePose(AccelStepper& turret);
+void homeTurret(AccelStepper& turret);
 #endif /*TURRET_H_ */

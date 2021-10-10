@@ -6,6 +6,7 @@
 #include "../lib/motor/motor.h"
 #include "../lib/turret/turret.h"
 
+#define START_BUTTON      PIN_PD5
 
 Laser laser(LASER_PIN, 2000L);
 IR irSensors(IR1_PIN, IR2_PIN, IR3_PIN, IR4_PIN,
@@ -24,7 +25,6 @@ AccelStepper rightStepper(AccelStepper::FULL4WIRE, R_STEPPER_PIN_1,
 // Use half step for speed and low current usage
 AccelStepper turretStepper(AccelStepper::HALF4WIRE, TURRET_PIN_1, 
                            TURRET_PIN_3, TURRET_PIN_2, TURRET_PIN_4, false);
-// AccelStepper stepper(AccelStepper::FULL4WIRE, PIN_PC7, PIN_PC5, PIN_PC6, PIN_PC4);
 
 void setup() {  
   Serial.begin(9600);
@@ -36,17 +36,16 @@ void setup() {
 
   turretStepper.setMaxSpeed(MAX_SPEED_HALFSTEP);
   turretStepper.setAcceleration(200);
-  turretStepper.setMaxSpeed(1000);
+  turretStepper.setMaxSpeed(MAX_SPEED_HALFSTEP);
   turretStepper.setCurrentPosition(0);
-  turretStepper.move(1000);
-  pinMode(PIN_PD5, OUTPUT);
+  pinMode(START_BUTTON, OUTPUT);
 }
 
 void loop() {
-    if (digitalRead(PIN_PD5)) {
+    if (digitalRead(START_BUTTON)) {
         laser.shootLaser();
         locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
-        irSensors.targetSearchv2(leftStepper, rightStepper, turretStepper, laser);
+        irSensors.targetSearch(leftStepper, rightStepper, turretStepper, laser);
      /*
         laser.constantOn();
        while(1) {

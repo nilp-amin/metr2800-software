@@ -42,10 +42,12 @@ void setup() {
 }
 
 void loop() {
+
     if (digitalRead(START_BUTTON)) {
-        laser.shootLaser();
+        //laser.shootLaser();
         locate(frontUltrasonic, rearUltrasonic, leftStepper, rightStepper);
         irSensors.targetSearch(leftStepper, rightStepper, turretStepper, laser);
+        //irSensors.lateralSearch(turretStepper, laser);
      /*
         laser.constantOn();
        while(1) {

@@ -38,188 +38,82 @@ void IR::lateralSearch(AccelStepper& turret, Laser laser) {
     float currReading = 0;
 
     // First want to move to home configuration and then sweep 50 degrees
-    uint8_t sweepAngle = 50;
-    uint8_t lowThreshold = 10;
+    uint8_t sweepAngle = 40;
+    uint8_t lowThreshold = 30;
 
     homeTurret(turret);
+    laser.constantOn();
     turret.enableOutputs();
     turret.move((long) sweepAngle * STEPS_PER_REV_HALFSTEP / 360);
     while(turret.run()) {
         currReading = IR::totalSensorAvg(this->samples);
+        //currReading = IR::innerSensorAvg(this->samples);
         if (currReading > maxReading) {
             maxReading = currReading;
             maxReadingPos = turret.currentPosition();
         }
-        if (maxReading - lowThreshold > currReading) {
-            break;
+        if (maxReading - lowThreshold > currReading) { // TODO: Fix this threshold before testing with it again
+            //break;
         }
     }
-    turret.moveTo(maxReadingPos);
-    turret.runSpeedToPosition();
+    turret.moveTo(maxReadingPos - 100);
+    turret.runToPosition();
     turret.disableOutputs();
     laser.shootLaser();
     moveTurretSensePose(turret);
 }
 
-void IR::targetSearchv1(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser) {
-    // Reset stepper positions for logic
-    lstepper.setCurrentPosition(0);
-    rstepper.setCurrentPosition(0);
-    turret.setCurrentPosition(0);
-    moveTurretSensePose(turret);
-
-    // Reset stepper movement to constant velocity
-    lstepper.setAcceleration(MAX_SPEED_FULLSTEP);
-    rstepper.setAcceleration(MAX_SPEED_FULLSTEP);
-
-    uint8_t BASE_STEP_INTERVAL = 57; // provides samples at 10deg
-
-    float currAngle = 0;
-    float stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
-
-    float maxlongReading = 0;
-    float currReading = 0;
-    float threshold = 1.5; // TODO: tune this condition
-    long lstepperPos = 0;
-    long rstepperPos = 0;
-    uint8_t fineStepActive = 0;
-    while (1) {
-        currReading = IR::totalSensorAvg(this->samples);
-        // TODO: Make the robot move faster when small increases are seen
-        if (currReading > maxlongReading) {
-            /*
-            if (abs(currReading - maxlongReading) < threshold && !fineStepActive) {
-                BASE_STEP_INTERVAL = 100;
-                stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
-            } else {
-                BASE_STEP_INTERVAL = 57;
-                stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
-                fineStepActive = 1;
-            }
-            */
-            maxlongReading = currReading;
-            lstepperPos = lstepper.currentPosition();
-            rstepperPos = rstepper.currentPosition();
-        }
-        stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
-
-        if (currAngle >= 90) {
-            // First check if the maxValue is a valid max value
-            if (maxlongReading >= 20) { // TODO: tune this condition
-                // Move to first max pos
-                multiMoveTo(lstepper, rstepper, lstepperPos, rstepperPos);
-                // Re-sweep area to find accurate pos of maximum 
-                slowSweep(lstepper, rstepper, 10); // TODO: tune this condition
-                // Do lateral search
-                IR::lateralSearch(turret, laser);
-                rotateCW(lstepper, rstepper, 45);
-                lstepperPos = 0;
-                rstepperPos = 0;
-                maxlongReading = 0;
-                // Reset rotation steps to max after shooting
-                //BASE_STEP_INTERVAL = 100; 
-                //stepAngle = IR::calculateStepAngle(BASE_STEP_INTERVAL);
-                //fineStepActive = 0;
-            }
-            lstepper.setCurrentPosition(0);
-            rstepper.setCurrentPosition(0);
-            currAngle = 0;
-            continue;
-        }
-        currAngle += stepAngle;
-    }
-}
-
 void IR::targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser) {
     lstepper.setCurrentPosition(0);
     rstepper.setCurrentPosition(0);
+    lstepper.setSpeed(MAX_SPEED_FULLSTEP);
+    rstepper.setSpeed(-MAX_SPEED_FULLSTEP);
     turret.setCurrentPosition(0);
     moveTurretSensePose(turret);
 
-    const unsigned long angle = 30 * 360;
-    const uint8_t lowThreshold = 10;
-    const long steps = (long)angle * STEPS_PER_REV_FULLSTEP / 360;
-    lstepper.move(steps);
-    rstepper.move(-steps);
+    //const unsigned long angle = 30 * 360;
+    //const long steps = (long)angle * STEPS_PER_REV_FULLSTEP / 360;
+    const long checkBackSteps = (long)90 * STEPS_PER_REV_FULLSTEP / 360;
+    //lstepper.move(steps);
+    //rstepper.move(-steps);
 
     float maxReading = 0;
     float currReading = 0;
     long lstepperPos = 0;
     long rstepperPos = 0;
+    long checkBackStepCount = 0;
+    uint8_t stepCount = 0;
     while(1) {
-        lstepper.run();
-        rstepper.run();
-        currReading = IR::totalSensorAvg(this->samples);
-        if (currReading > maxReading) {
-            maxReading = currReading;
-            lstepperPos = lstepper.currentPosition(); 
-            rstepperPos = rstepper.currentPosition();
+        if (lstepper.runSpeed()) {
+            checkBackStepCount++;
         }
-        if (maxReading - lowThreshold > currReading) {
-            multiMoveTo(lstepper, rstepper, lstepperPos, rstepperPos);
-            IR::lateralSearch(turret, laser);
-            rotateCW(lstepper, rstepper, 45);
-            lstepperPos = 0;
-            rstepperPos = 0;
-            maxReading = 0;
-            lstepper.move(steps);
-            rstepper.move(-steps);
+        rstepper.runSpeed();
+        if (stepCount == 10) {
+            currReading = IR::totalSensorAvg(this->samples);
+            if (currReading > maxReading) {
+                maxReading = currReading;
+                lstepperPos = lstepper.currentPosition(); 
+                rstepperPos = rstepper.currentPosition();
+            }
+            if (checkBackStepCount >= checkBackSteps && maxReading > 20) {
+                multiMoveTo(lstepper, rstepper, lstepperPos - 10, rstepperPos + 10);
+                IR::lateralSearch(turret, laser);
+                rotateCW(lstepper, rstepper, 45);
+                lstepperPos = 0;
+                rstepperPos = 0;
+                maxReading = 0;
+                checkBackStepCount = 0;
+                lstepper.setSpeed(MAX_SPEED_FULLSTEP);
+                rstepper.setSpeed(-MAX_SPEED_FULLSTEP);
+                //lstepper.move(steps);
+                //rstepper.move(-steps);
+            } else if (checkBackStepCount >= checkBackSteps) {
+                checkBackStepCount = 0;
+            }
+            stepCount = 0;
+            continue;
         }
-    }
-
-}
-
-void IR::slowSweep(AccelStepper& lstepper, AccelStepper& rstepper, float sweep) {
-    long middlePosL = lstepper.currentPosition();
-    long middlePosR = rstepper.currentPosition();
-
-    uint8_t BASE_STEP_INTERVAL = 6; // provides samples at 1deg
-
-    float currAngle = 0;
-    float stepAngle = (BASE_STEP_INTERVAL * 360 / STEPS_PER_REV_FULLSTEP);
-
-    float maxlongReading = 0;
-    float currReading = 0;
-    long lstepperPos = 0;
-    long rstepperPos = 0;
-
-    // we rotate CCW sweep deg
-    while (1) {
-        currReading = IR::totalSensorAvg(this->samples);
-        if (currReading > maxlongReading) {
-            maxlongReading = currReading;
-            lstepperPos = lstepper.currentPosition();
-            rstepperPos = rstepper.currentPosition();
-        }
-        stepCCW(lstepper, rstepper, BASE_STEP_INTERVAL);
-
-        if (currAngle >= sweep) {
-            // Move to the middle position again
-            currAngle = 0;
-            multiMoveTo(lstepper, rstepper, middlePosL, middlePosR);
-            break;
-        }
-        currAngle += stepAngle;
-    }
-
-    // we rotate CW sweep deg
-    while (1) {
-        currReading = IR::totalSensorAvg(this->samples);
-        if (currReading > maxlongReading) {
-            maxlongReading = currReading;
-            lstepperPos = lstepper.currentPosition();
-            rstepperPos = rstepper.currentPosition();
-        }
-        stepCW(lstepper, rstepper, BASE_STEP_INTERVAL);
-
-        if (currAngle >= sweep) {
-            // Move to maximum irridance position 
-            currAngle = 0;
-            multiMoveTo(lstepper, rstepper, lstepperPos, rstepperPos);
-            // Step a couple degress CW due to slight error
-            break;
-        }
-        currAngle += stepAngle;
+        stepCount++;
     }
 }
 
@@ -235,6 +129,14 @@ float IR::totalSensorAvg(uint16_t _samples) {
         sum += val;
     }
     return sum / (sizeof(pins)/sizeof(pins[0]));
+}
+
+float IR::innerSensorAvg(uint16_t _samples) {
+    float sum = IR::readIR(pins[4], _samples) +
+                IR::readIR(pins[5], _samples) +
+                IR::readIR(pins[6], _samples) + 
+                IR::readIR(pins[7], _samples);
+    return sum / 4;
 }
 
 float IR::readIR(uint8_t pin, uint16_t _samples) {
@@ -257,8 +159,8 @@ void moveTurret(AccelStepper& turret, long step) {
 void moveTurretSensePose(AccelStepper& turret) {
     uint8_t _angle = 30;
     turret.enableOutputs();
-    turret.move((long) _angle * STEPS_PER_REV_HALFSTEP / 360);
-    while(turret.run());
+    turret.moveTo((long) _angle * STEPS_PER_REV_HALFSTEP / 360);
+    turret.runToPosition();
     turret.disableOutputs();
 }
 

@@ -48,8 +48,8 @@ class IR {
            uint8_t ir5, uint8_t ir6, uint8_t ir7, uint8_t ir8, 
            float sensativity, uint16_t samples);
         float totalSensorAvg(uint16_t _samples);
+        float innerSensorAvg(uint16_t _samples);
         void targetSearch(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
-        void targetSearchv1(AccelStepper& lstepper, AccelStepper& rstepper, AccelStepper& turret, Laser laser);
         void lateralSearch(AccelStepper& turret, Laser laser);
 
         float readings[8];
